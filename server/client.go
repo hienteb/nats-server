@@ -1941,6 +1941,9 @@ func (c *client) sendRTTPing() bool {
 // the c.rtt is 0 and wants to force an update by sending a PING.
 // Client lock held on entry.
 func (c *client) sendRTTPingLocked() bool {
+	if c.mqtt != nil {
+		return false
+	}
 	// Most client libs send a CONNECT+PING and wait for a PONG from the
 	// server. So if firstPongSent flag is set, it is ok for server to
 	// send the PING. But in case we have client libs that don't do that,
@@ -3962,7 +3965,7 @@ func (c *client) processPingTimer() {
 	c.mu.Lock()
 	c.ping.tmr = nil
 	// Check if connection is still opened
-	if c.isClosed() {
+	if c.isClosed() || c.mqtt != nil {
 		c.mu.Unlock()
 		return
 	}
